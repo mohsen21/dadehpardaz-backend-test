@@ -21,6 +21,8 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'national_code',
+        'is_approver',
     ];
 
     /**
@@ -43,6 +45,12 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'is_approver' => 'boolean',
         ];
+    }
+
+    public function expenseRequests(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(ExpenseRequest::class);
     }
 }
