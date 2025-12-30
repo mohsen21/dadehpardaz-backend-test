@@ -5,16 +5,17 @@ namespace App\Http\Controllers;
 use App\Http\Requests\ApproveExpenseRequestRequest;
 use App\Http\Requests\ProcessPaymentRequest;
 use App\Http\Resources\ExpenseRequestCollection;
+use App\Http\Traits\ApiResponseTrait;
 use App\Repositories\ExpenseRequestRepositoryInterface;
 use App\Services\ExpenseRequestService;
 use App\Services\FileService;
 use App\Services\PaymentService;
 use Illuminate\Http\JsonResponse;
-use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ApprovalController extends Controller
 {
+    use ApiResponseTrait;
     public function __construct(
         private ExpenseRequestService $expenseRequestService,
         private PaymentService $paymentService,
@@ -27,7 +28,7 @@ class ApprovalController extends Controller
     {
         $expenseRequests = $this->expenseRequestService->getPendingRequests();
 
-        return response()->json(new ExpenseRequestCollection($expenseRequests));
+        return $this->collectionResponse(new ExpenseRequestCollection($expenseRequests));
     }
 
     public function approve(ApproveExpenseRequestRequest $request): JsonResponse
@@ -43,10 +44,7 @@ class ApprovalController extends Controller
             );
         }
 
-        return response()->json([
-            'message' => 'Action completed',
-            'results' => $results,
-        ]);
+        return $this->successResponse($results, 'Action completed');
     }
 
     public function downloadAttachment(int $id): StreamedResponse|JsonResponse
@@ -54,30 +52,25 @@ class ApprovalController extends Controller
         $expenseRequest = $this->expenseRequestRepository->findByIdOrFail($id);
 
         if (!$expenseRequest->attachment_path) {
-            return response()->json(['message' => 'No attachment found'], Response::HTTP_NOT_FOUND);
+            return $this->notFoundResponse('No attachment found');
         }
 
         $url = $this->fileService->getPresignedUrl($expenseRequest->attachment_path);
 
-        return response()->json([
-            'download_url' => $url,
-        ]);
+        return $this->successResponse(['download_url' => $url]);
     }
 
     public function processPayment(ProcessPaymentRequest $request): JsonResponse
     {
         $results = $this->paymentService->processPayments($request->validated()['expense_request_ids']);
 
-        return response()->json([
-            'message' => 'Payment processing completed',
-            'results' => $results,
-        ]);
+        return $this->successResponse($results, 'Payment processing completed');
     }
 
     public function approvedRequests(): JsonResponse
     {
         $expenseRequests = $this->expenseRequestService->getApprovedRequests();
 
-        return response()->json(new ExpenseRequestCollection($expenseRequests));
+        return $this->collectionResponse(new ExpenseRequestCollection($expenseRequests));
     }
 }

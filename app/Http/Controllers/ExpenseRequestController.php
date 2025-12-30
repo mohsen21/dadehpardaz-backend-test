@@ -5,13 +5,14 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreExpenseRequestRequest;
 use App\Http\Resources\ExpenseRequestCollection;
 use App\Http\Resources\ExpenseRequestResource;
+use App\Http\Traits\ApiResponseTrait;
 use App\Repositories\ExpenseRequestRepositoryInterface;
 use App\Services\ExpenseRequestService;
 use Illuminate\Http\JsonResponse;
-use Symfony\Component\HttpFoundation\Response;
 
 class ExpenseRequestController extends Controller
 {
+    use ApiResponseTrait;
     public function __construct(
         private ExpenseRequestService $expenseRequestService,
         private ExpenseRequestRepositoryInterface $expenseRequestRepository
@@ -28,17 +29,17 @@ class ExpenseRequestController extends Controller
         // Eager loading to prevent N+1 query problem
         $expenseRequest->load(['user', 'expenseCategory']);
 
-        return response()->json([
-            'message' => 'Expense request created successfully',
-            'data' => new ExpenseRequestResource($expenseRequest),
-        ], Response::HTTP_CREATED);
+        return $this->createdResponse(
+            new ExpenseRequestResource($expenseRequest),
+            'Expense request created successfully'
+        );
     }
 
     public function index(): JsonResponse
     {
         $expenseRequests = $this->expenseRequestService->getPendingRequests();
 
-        return response()->json(new ExpenseRequestCollection($expenseRequests));
+        return $this->collectionResponse(new ExpenseRequestCollection($expenseRequests));
     }
 
     public function show(int $id): JsonResponse
@@ -47,6 +48,6 @@ class ExpenseRequestController extends Controller
         // Eager loading to prevent N+1 query problem
         $expenseRequest->load(['user', 'expenseCategory']);
 
-        return response()->json(new ExpenseRequestResource($expenseRequest));
+        return $this->resourceResponse(new ExpenseRequestResource($expenseRequest));
     }
 }
