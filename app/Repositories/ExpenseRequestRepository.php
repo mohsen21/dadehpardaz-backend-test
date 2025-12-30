@@ -38,6 +38,7 @@ class ExpenseRequestRepository implements ExpenseRequestRepositoryInterface
 
     public function getPendingWithRelations(): Collection
     {
+        // Eager loading to prevent N+1 query problem
         return ExpenseRequest::with(['user', 'expenseCategory'])
             ->pending()
             ->orderBy('created_at', 'desc')
@@ -46,6 +47,7 @@ class ExpenseRequestRepository implements ExpenseRequestRepositoryInterface
 
     public function getApprovedWithRelations(): Collection
     {
+        // Eager loading to prevent N+1 query problem
         return ExpenseRequest::with(['user', 'expenseCategory'])
             ->approved()
             ->orderBy('created_at', 'desc')

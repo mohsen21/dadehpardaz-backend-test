@@ -96,7 +96,9 @@ class ExpenseRequestService
                     'rejection_reason' => $rejectionReason,
                 ]);
 
-                $this->notificationService->notifyRequestRejected($expenseRequest);
+                // Eager load user to prevent N+1 query issue
+                $expenseRequest->load('user');
+                $this->notificationService->notifyRequestRejected($expenseRequest, $expenseRequest->user);
 
                 DB::commit();
                 $results[$expenseRequest->id] = ['success' => true];

@@ -4,9 +4,9 @@ namespace App\Services\BankStrategy;
 
 use InvalidArgumentException;
 
-class BankFactory
+class BankFactory implements BankFactoryInterface
 {
-    public static function create(string $shebaNumber): BankInterface
+    public function create(string $shebaNumber): BankInterface
     {
         if (strlen($shebaNumber) < 2) {
             throw new InvalidArgumentException('Invalid sheba number');

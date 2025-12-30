@@ -25,6 +25,9 @@ class ExpenseRequestController extends Controller
             $request->file('attachment')
         );
 
+        // Eager loading to prevent N+1 query problem
+        $expenseRequest->load(['user', 'expenseCategory']);
+
         return response()->json([
             'message' => 'Expense request created successfully',
             'data' => new ExpenseRequestResource($expenseRequest),
@@ -41,6 +44,7 @@ class ExpenseRequestController extends Controller
     public function show(int $id): JsonResponse
     {
         $expenseRequest = $this->expenseRequestRepository->findByIdOrFail($id);
+        // Eager loading to prevent N+1 query problem
         $expenseRequest->load(['user', 'expenseCategory']);
 
         return response()->json(new ExpenseRequestResource($expenseRequest));

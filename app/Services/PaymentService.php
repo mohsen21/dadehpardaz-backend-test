@@ -6,7 +6,7 @@ use App\Exceptions\BankException;
 use App\Exceptions\PaymentException;
 use App\Models\ExpenseRequest;
 use App\Repositories\ExpenseRequestRepositoryInterface;
-use App\Services\BankStrategy\BankFactory;
+use App\Services\BankStrategy\BankFactoryInterface;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -14,7 +14,8 @@ class PaymentService
 {
     public function __construct(
         private NotificationService $notificationService,
-        private ExpenseRequestRepositoryInterface $expenseRequestRepository
+        private ExpenseRequestRepositoryInterface $expenseRequestRepository,
+        private BankFactoryInterface $bankFactory
     ) {
     }
 
@@ -40,7 +41,7 @@ class PaymentService
                 throw new PaymentException('Expense request status changed');
             }
 
-            $bank = BankFactory::create($expenseRequest->sheba_number);
+            $bank = $this->bankFactory->create($expenseRequest->sheba_number);
             $result = $bank->processPayment($expenseRequest->sheba_number, (float) $expenseRequest->amount);
 
             if (!$result['success']) {
@@ -57,7 +58,9 @@ class PaymentService
 
             DB::commit();
 
-            $this->notificationService->notifyPaymentSuccessful($expenseRequest);
+            // Eager load user to prevent N+1 query issue
+            $expenseRequest->load('user');
+            $this->notificationService->notifyPaymentSuccessful($expenseRequest, $expenseRequest->user);
         } catch (\Exception $e) {
             DB::rollBack();
 

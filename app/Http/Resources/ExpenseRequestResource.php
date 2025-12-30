@@ -16,15 +16,8 @@ class ExpenseRequestResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'user' => [
-                'id' => $this->user->id,
-                'name' => $this->user->name,
-                'national_code' => $this->user->national_code,
-            ],
-            'expense_category' => [
-                'id' => $this->expenseCategory->id,
-                'name' => $this->expenseCategory->name,
-            ],
+            'user' => new UserResource($this->user),
+            'expense_category' => new ExpenseCategoryResource($this->expenseCategory),
             'description' => $this->description,
             'amount' => (float) $this->amount,
             'sheba_number' => $this->sheba_number,
