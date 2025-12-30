@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\ApproveExpenseRequestRequest;
 use App\Http\Requests\ProcessPaymentRequest;
 use App\Http\Resources\ExpenseRequestCollection;
-use App\Models\ExpenseRequest;
+use App\Repositories\ExpenseRequestRepositoryInterface;
 use App\Services\ExpenseRequestService;
 use App\Services\FileService;
 use App\Services\PaymentService;
@@ -18,7 +18,8 @@ class ApprovalController extends Controller
     public function __construct(
         private ExpenseRequestService $expenseRequestService,
         private PaymentService $paymentService,
-        private FileService $fileService
+        private FileService $fileService,
+        private ExpenseRequestRepositoryInterface $expenseRequestRepository
     ) {
     }
 
@@ -50,7 +51,7 @@ class ApprovalController extends Controller
 
     public function downloadAttachment(int $id): StreamedResponse|JsonResponse
     {
-        $expenseRequest = ExpenseRequest::findOrFail($id);
+        $expenseRequest = $this->expenseRequestRepository->findByIdOrFail($id);
 
         if (!$expenseRequest->attachment_path) {
             return response()->json(['message' => 'No attachment found'], Response::HTTP_NOT_FOUND);

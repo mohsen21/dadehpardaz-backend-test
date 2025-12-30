@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Exceptions\BankException;
 use App\Exceptions\PaymentException;
 use App\Models\ExpenseRequest;
+use App\Repositories\ExpenseRequestRepositoryInterface;
 use App\Services\BankStrategy\BankFactory;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -12,7 +13,8 @@ use Illuminate\Support\Facades\Log;
 class PaymentService
 {
     public function __construct(
-        private NotificationService $notificationService
+        private NotificationService $notificationService,
+        private ExpenseRequestRepositoryInterface $expenseRequestRepository
     ) {
     }
 
@@ -45,7 +47,7 @@ class PaymentService
                 throw new BankException('Bank payment failed: ' . ($result['message'] ?? 'Unknown error'));
             }
 
-            $expenseRequest->update(['status' => 'paid']);
+            $this->expenseRequestRepository->update($expenseRequest, ['status' => 'paid']);
 
             Log::info('Payment processed successfully', [
                 'expense_request_id' => $expenseRequest->id,
@@ -71,9 +73,7 @@ class PaymentService
     public function processPayments(array $expenseRequestIds): array
     {
         $results = [];
-        $expenseRequests = ExpenseRequest::whereIn('id', $expenseRequestIds)
-            ->where('status', 'approved')
-            ->get();
+        $expenseRequests = $this->expenseRequestRepository->findApprovedByIds($expenseRequestIds);
 
         foreach ($expenseRequests as $expenseRequest) {
             try {

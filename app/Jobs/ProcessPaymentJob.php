@@ -2,7 +2,7 @@
 
 namespace App\Jobs;
 
-use App\Models\ExpenseRequest;
+use App\Repositories\ExpenseRequestRepositoryInterface;
 use App\Services\PaymentService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
@@ -12,11 +12,12 @@ class ProcessPaymentJob implements ShouldQueue
 {
     use Queueable;
 
-    public function handle(PaymentService $paymentService): void
-    {
-        $expenseRequests = ExpenseRequest::approved()
-            ->where('status', '!=', 'paid')
-            ->get();
+    public function handle(
+        PaymentService $paymentService,
+        ExpenseRequestRepositoryInterface $expenseRequestRepository
+    ): void {
+        $expenseRequests = $expenseRequestRepository->getApprovedWithRelations()
+            ->filter(fn($request) => $request->status !== 'paid');
 
         if ($expenseRequests->isEmpty()) {
             Log::info('No approved expense requests to process');

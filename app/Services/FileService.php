@@ -18,9 +18,10 @@ class FileService
 
     public function getPresignedUrl(string $path, int $expirationMinutes = 60): string
     {
+        /** @var \Illuminate\Filesystem\AwsS3V3Adapter $disk */
+        $disk = Storage::disk('minio');
         
-    
-        return Storage::disk('minio')->temporaryUrl($path, now()->addMinutes($expirationMinutes));
+        return $disk->temporaryUrl($path, now()->addMinutes($expirationMinutes));
     }
 
     public function delete(string $path): bool

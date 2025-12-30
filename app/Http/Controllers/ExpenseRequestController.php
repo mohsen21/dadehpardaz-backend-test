@@ -5,16 +5,16 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreExpenseRequestRequest;
 use App\Http\Resources\ExpenseRequestCollection;
 use App\Http\Resources\ExpenseRequestResource;
-use App\Models\ExpenseRequest;
+use App\Repositories\ExpenseRequestRepositoryInterface;
 use App\Services\ExpenseRequestService;
-use App\Services\FileService;
 use Illuminate\Http\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 
 class ExpenseRequestController extends Controller
 {
     public function __construct(
-        private ExpenseRequestService $expenseRequestService
+        private ExpenseRequestService $expenseRequestService,
+        private ExpenseRequestRepositoryInterface $expenseRequestRepository
     ) {
     }
 
@@ -40,8 +40,8 @@ class ExpenseRequestController extends Controller
 
     public function show(int $id): JsonResponse
     {
-        $expenseRequest = ExpenseRequest::with(['user', 'expenseCategory'])
-            ->findOrFail($id);
+        $expenseRequest = $this->expenseRequestRepository->findByIdOrFail($id);
+        $expenseRequest->load(['user', 'expenseCategory']);
 
         return response()->json(new ExpenseRequestResource($expenseRequest));
     }
