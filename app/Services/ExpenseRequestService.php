@@ -69,6 +69,11 @@ class ExpenseRequestService
             DB::beginTransaction();
             try {
                 $this->expenseRequestRepository->update($expenseRequest, ['status' => 'approved']);
+
+                // Eager load user to prevent N+1 query issue
+                $expenseRequest->load('user');
+                $this->notificationService->notifyRequestApproved($expenseRequest, $expenseRequest->user);
+
                 DB::commit();
                 $results[$expenseRequest->id] = ['success' => true];
             } catch (\Exception $e) {
