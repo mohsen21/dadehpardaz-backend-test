@@ -66,10 +66,13 @@ class ExpenseRequestService
         $expenseRequests = $this->expenseRequestRepository->findPendingByIds($expenseRequestIds);
 
         foreach ($expenseRequests as $expenseRequest) {
+            DB::beginTransaction();
             try {
                 $this->expenseRequestRepository->update($expenseRequest, ['status' => 'approved']);
+                DB::commit();
                 $results[$expenseRequest->id] = ['success' => true];
             } catch (\Exception $e) {
+                DB::rollBack();
                 $results[$expenseRequest->id] = [
                     'success' => false,
                     'error' => $e->getMessage(),
@@ -86,6 +89,7 @@ class ExpenseRequestService
         $expenseRequests = $this->expenseRequestRepository->findPendingByIds($expenseRequestIds);
 
         foreach ($expenseRequests as $expenseRequest) {
+            DB::beginTransaction();
             try {
                 $this->expenseRequestRepository->update($expenseRequest, [
                     'status' => 'rejected',
@@ -94,8 +98,10 @@ class ExpenseRequestService
 
                 $this->notificationService->notifyRequestRejected($expenseRequest);
 
+                DB::commit();
                 $results[$expenseRequest->id] = ['success' => true];
             } catch (\Exception $e) {
+                DB::rollBack();
                 $results[$expenseRequest->id] = [
                     'success' => false,
                     'error' => $e->getMessage(),
