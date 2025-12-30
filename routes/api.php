@@ -13,8 +13,8 @@ Route::prefix('expense-requests')->group(function () {
 Route::prefix('approvals')->group(function () {
     Route::get('/', [ApprovalController::class, 'index']);
     Route::post('/action', [ApprovalController::class, 'approve']);
-    Route::get('/{id}/download', [ApprovalController::class, 'downloadAttachment']);
     Route::get('/approved', [ApprovalController::class, 'approvedRequests']);
     Route::post('/process-payment', [ApprovalController::class, 'processPayment']);
+    Route::get('/{id}/download', [ApprovalController::class, 'downloadAttachment']);
 });
 
